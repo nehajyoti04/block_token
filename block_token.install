@@ -1,0 +1,36 @@
+<?php
+
+// /**
+//  * @file
+//  * Install, update and uninstall functions for the block_token module.
+//  */
+// use Drupal\Core\Database\Database;
+// //use Drupal\Core\Database\Query\Condition;
+// //use Drupal\Core\Site\Settings;
+// /**
+//  * Implements hook_install().
+//  */
+// function block_token_install() {
+// //  $schema['block'] = array();
+// //  block_token_schema_alter($schema);
+// //  foreach ($schema['block']['fields'] as $field => $spec) {
+// //    if (db_field_exists('block', $field)) {
+// //      watchdog('system', 'Module install: Attempt to recreate field: "%field", when it already exists.', array('%field' => $field), WATCHDOG_WARNING);
+// //    }
+// //    else {
+// //      db_add_field('block', $field, $spec);
+// //    }
+// //  }
+
+//   $spec = array(
+//     'description' => 'Boolean indicating whether the Block Token should be created or not.',
+//     'type' => 'int',
+//     'not null' => TRUE,
+//     'default' => 0,
+//   );
+//   $schema = Database::getConnection()->schema();
+//   $schema->addField('block', 'block_token', $spec);
+
+
+// }
+
