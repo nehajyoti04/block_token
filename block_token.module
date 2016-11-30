@@ -5,13 +5,16 @@
  * Defines necessary menu's, Permissions, block_token form.
  */
 
+
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\block\Entity\Block;
 
+
 define('BLOCK_TOKEN_SEPARATOR', ':');
+
 
 /**
  * Implements hook_help().
@@ -51,43 +54,55 @@ function block_token_help($route_name, RouteMatchInterface $route_match) {
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function block_token_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  if ( $form_id == 'block_content_basic_form') {
-    if (\Drupal::currentUser()->hasPermission('administer block classes')) {
+function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if (\Drupal::currentUser()->hasPermission('administer block classes')) {
 
-      /** @var \Drupal\block\BlockInterface $block */
-      // $block = $form_state->getFormObject()->getEntity();
 
-      // // This will automatically be saved in the third party settings.
-      $form['third_party_settings']['#tree'] = TRUE;
-      $form['third_party_settings']['block_token']['tokens'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Block token(s)'),
-        '#description' => t('Customize the styling of this block by adding CSS classes. Separate multiple classes by spaces.'),
-        // '#default_value' => $block->getThirdPartySetting('block_token', 'tokens'),
-      );
+    /** @var \Drupal\block\BlockInterface $block */
+    $block = $form_state->getFormObject()->getEntity();
+    // dpm("block");
+    // dpm($block);
+    // This will automatically be saved in the third party settings.
+    $form['settings']['#tree'] = TRUE;
+    $form['settings']['block_token']['token_value'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Token(s)'),
+      '#description' => t('Customize the styling of this block by adding CSS classes. Separate multiple classes by spaces.'),
+      '#default_value' => $block->getThirdPartySetting('block_token', 'token_value'),
+    );
 
-    }
+    $block_module = end($block->getDependencies()['module']);
+    $original_id = $block->getOriginalId();
+    // dpm($original_id);
+    // if (!is_null($block->delta)) {
+      $token = block_token_token_name($block_module, $original_id);
+
+      $form['settings']['block_token']['token_value']['#description'] = t('Token will be @token', array(
+        '@token' => sprintf('[block_token:%s]', $token),
+      ));
+    // }
+
   }
-  elseif ( $form_id == 'block_form') {
-    if (\Drupal::currentUser()->hasPermission('administer block classes')) {
-
-      /** @var \Drupal\block\BlockInterface $block */
-      $block = $form_state->getFormObject()->getEntity();
-
-      // This will automatically be saved in the third party settings.
-      $form['third_party_settings']['#tree'] = TRUE;
-      $form['third_party_settings']['block_token']['tokens'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Block token(s)'),
-        '#description' => t('Customize the styling of this block by adding CSS classes. Separate multiple classes by spaces.'),
-        '#default_value' => $block->getThirdPartySetting('block_token', 'tokens'),
-      );
-
-    }
-  }
-
 }
+
+/**
+ * Creates the token string.
+ *
+ * @param string $module
+ *   Module name.
+ * @param string $delta
+ *   Block delta.
+ *
+ * @return string
+ *   Token name.
+ */
+function block_token_token_name($module, $delta) {
+  // @todo use machine_name if available
+  return $module . BLOCK_TOKEN_SEPARATOR . $delta;
+}
+
+
+
 
 /**
  * Implements hook_preprocess_HOOK().
