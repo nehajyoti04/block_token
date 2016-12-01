@@ -50,6 +50,149 @@ function block_token_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
+/**
+ * Renders the block.
+ *
+ * @param string $module
+ *   Module name.
+ * @param string $delta
+ *   Block delta.
+ *
+ * @return string
+ *   Rendered block.
+ */
+function block_token_block_render($bid) {
+
+  // $block = block_load($module, $delta);
+  // foreach (array('region', 'title') as $key) {
+  //   $block->{$key} = '';
+  // }
+  // $block = _block_render_blocks(array($block));
+  // $block = _block_get_renderable_array($block);
+  // return drupal_render($block);
+  return "render block";
+
+     $block = \Drupal\block\Entity\Block::load($bid);
+//   $block = \Drupal\block_content\Entity\BlockContent::load($bid);
+// $render = \Drupal::entityManager()->
+//   getViewBuilder('block_content')->view($block);
+// return $render;
+
+
+
+$render = \Drupal::entityManager()->
+  getViewBuilder('block_content')->view($block);
+return $render;
+
+}
+
+/**
+ * Blocks with tokens.
+ *
+ * @param string $token
+ *   Token name.
+ *
+ * @return array|bool
+ *   If token name provided boolean indicating whether it is on or not
+ *   otherwise the list of blocks with tokens.
+ */
+function block_token_blocks($token = NULL) {
+  static $block_token;
+
+  if (is_null($block_token)) {
+    $block_token = array();
+
+    // Select all the name fields from the config table  starting with block.block
+    //
+    //
+
+    $blocks = \Drupal::database()->select('config', 'b')
+      ->fields('b', array('name'))
+      ->condition('name', db_like("block.block") . '%' , 'LIKE' )
+
+      ->execute();
+
+      foreach ($blocks as $block) {
+
+      $bid = explode('.', $block->name)[2];
+
+      $block = \Drupal\block\Entity\Block::load($bid);
+
+      $module = end($block->getDependencies()['module']);
+
+
+// $render = \Drupal::entityManager()->
+//   getViewBuilder('block_content')->view($block);
+// return $render;
+
+      $block_token[block_token_token_name($module, $bid)] = $block;
+
+    }
+
+
+  if (!is_null($token)) {
+    return !empty($block_token[$token]);
+    }
+  }
+
+  return $block_token;
+
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function block_token_token_info() {
+  $tokens = array();
+
+  $blocks = block_token_blocks();
+  foreach ($blocks as $token => $block) {
+    $module = end($block->getDependencies()['module']);
+    $name = t('Block from module %module with id %delta', array(
+      '%module' => $module,
+      '%delta' => $block->getOriginalId(),
+    ));
+    $tokens[$token] = array(
+      'name' => $name,
+      'description' => $name,
+    );
+  }
+
+  return array(
+    'types' => array(
+      'block_token' => array(
+        'name' => t("Block Token"),
+        'description' => t("Tokens containing blocks."),
+      ),
+    ),
+    'tokens' => array(
+      'block_token' => $tokens,
+    ),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function block_token_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  if ('block_token' == $type) {
+    foreach ($tokens as $token => $original) {
+      $replacement = '';
+
+      if (block_token_blocks($token)) {
+        list($module, $delta) = explode(BLOCK_TOKEN_SEPARATOR, $token, 2);
+        $replacement = block_token_block_render($delta);
+      }
+
+      $replacements[$original] = $replacement;
+    }
+  }
+
+  return $replacements;
+}
+
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -58,31 +201,43 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
   if (\Drupal::currentUser()->hasPermission('administer block classes')) {
 
 
+
+
+
+
     /** @var \Drupal\block\BlockInterface $block */
     $block = $form_state->getFormObject()->getEntity();
-    // dpm("block");
-    // dpm($block);
+
+
     // This will automatically be saved in the third party settings.
-    $form['settings']['#tree'] = TRUE;
-    $form['settings']['block_token']['token_value'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Token(s)'),
-      '#description' => t('Customize the styling of this block by adding CSS classes. Separate multiple classes by spaces.'),
+    $form['third_party_settings']['#tree'] = TRUE;
+    $form['third_party_settings']['block_token']['token_value'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Create the token for this block'),
+      '#description' => t('Token string is not available until the block is saved.'),
       '#default_value' => $block->getThirdPartySetting('block_token', 'token_value'),
+      // '#default_value' => isset($block->getThirdPartySetting('block_token', 'token_value')) ? $block->getThirdPartySetting('block_token', 'token_value') : '',
     );
+
+
 
     $block_module = end($block->getDependencies()['module']);
     $original_id = $block->getOriginalId();
-    // dpm($original_id);
-    // if (!is_null($block->delta)) {
-      $token = block_token_token_name($block_module, $original_id);
 
-      $form['settings']['block_token']['token_value']['#description'] = t('Token will be @token', array(
+    // if (!is_null($block->delta)) {
+    if (!$block->getThirdPartySetting('block_token', 'token_value')) {
+      $token = "hello 123";
+      // $token = block_token_token_name($original_id);
+
+      $form['token_settings']['block_token']['token_value']['#description'] = t('Token will be @token', array(
         '@token' => sprintf('[block_token:%s]', $token),
       ));
-    // }
+    }
 
   }
+// dpm("block");
+//     dpm($block);
+
 }
 
 /**
@@ -96,9 +251,9 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
  * @return string
  *   Token name.
  */
-function block_token_token_name($module, $delta) {
+function block_token_token_name($module, $block_id) {
   // @todo use machine_name if available
-  return $module . BLOCK_TOKEN_SEPARATOR . $delta;
+  return $module . BLOCK_TOKEN_SEPARATOR . $block_id;
 }
 
 
@@ -128,8 +283,6 @@ function block_token_preprocess_block(&$variables) {
 
 // if($form_id == 'block_content_basic_form' || $form_id == 'block_form') {
 
-//  dpm("form id");
-//  dpm($form_id);
 
 
 // //  if (user_access('administer block token') && (('block_admin_configure' == $form_id) || ('block_add_block_form' == $form_id))) {
