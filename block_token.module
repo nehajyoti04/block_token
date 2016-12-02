@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\block\Entity\Block;
-
+use Drupal\Core\Render\Markup;
 
 define('BLOCK_TOKEN_SEPARATOR', ':');
 
@@ -70,19 +70,28 @@ function block_token_block_render($bid) {
   // $block = _block_render_blocks(array($block));
   // $block = _block_get_renderable_array($block);
   // return drupal_render($block);
-  return "render block";
+  // return "render block";
 
-     $block = \Drupal\block\Entity\Block::load($bid);
-//   $block = \Drupal\block_content\Entity\BlockContent::load($bid);
+
+
+
 // $render = \Drupal::entityManager()->
 //   getViewBuilder('block_content')->view($block);
 // return $render;
 
 
 
-$render = \Drupal::entityManager()->
-  getViewBuilder('block_content')->view($block);
-return $render;
+
+$block1 = \Drupal\block\Entity\Block::load('bartik_search');
+$block_content = \Drupal::entityManager()
+  ->getViewBuilder('block')
+  ->view($block1);
+
+  return "<div>hello1</div>";
+
+// dpm( drupal_render($block_content)->__toString());
+return drupal_render($block_content)->__toString();
+
 
 }
 
@@ -103,8 +112,7 @@ function block_token_blocks($token = NULL) {
     $block_token = array();
 
     // Select all the name fields from the config table  starting with block.block
-    //
-    //
+
 
     $blocks = \Drupal::database()->select('config', 'b')
       ->fields('b', array('name'))
@@ -121,9 +129,6 @@ function block_token_blocks($token = NULL) {
       $module = end($block->getDependencies()['module']);
 
 
-// $render = \Drupal::entityManager()->
-//   getViewBuilder('block_content')->view($block);
-// return $render;
 
       $block_token[block_token_token_name($module, $bid)] = $block;
 
@@ -203,8 +208,6 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
 
 
 
-
-
     /** @var \Drupal\block\BlockInterface $block */
     $block = $form_state->getFormObject()->getEntity();
 
@@ -235,9 +238,6 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
     }
 
   }
-// dpm("block");
-//     dpm($block);
-
 }
 
 /**
@@ -273,73 +273,3 @@ function block_token_preprocess_block(&$variables) {
 }
 
 
-
-// /**
-//  * Implements hook_form_alter().
-//  *
-//  * Alter block edit form to add configuration field.
-//  */
-// function block_token_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-
-// if($form_id == 'block_content_basic_form' || $form_id == 'block_form') {
-
-
-
-// //  if (user_access('administer block token') && (('block_admin_configure' == $form_id) || ('block_add_block_form' == $form_id))) {
-// //    $block = block_load($form['module']['#value'], $form['delta']['#value']);
-// //
-//     $form['settings']['block_token'] = array(
-//       '#type' => 'checkbox',
-//       '#title' => t('Create the token for this block'),
-//       '#description' => t('Token string is not available until the block is saved.'),
-// //      '#default_value' => isset($block->block_token) ? $block->block_token : '',
-//     );
-// //
-// //    if (!is_null($block->delta)) {
-// //      $token = block_token_token_name($block->module, $block->delta);
-// //      $form['settings']['block_token']['#description'] = t('Token will be @token', array(
-// //        '@token' => sprintf('[block_token:%s]', $token),
-// //      ));
-// //    }
-// //
-//    // $form['#submit'][] = 'block_token_form_submit';
-// //  }
-//  $form['actions']['submit']['#submit'][] = end($form['actions']['submit']['#submit']);
-//  $form['actions']['submit']['#submit'][1] = 'block_token_form_submit';
-// }
-//  dpm($form);
-
-// }
-
-// /**
-//  * Submit callback.
-//  */
-// function block_token_form_submit(array &$form, FormStateInterface $form_state) {
-
-
-
-
-//    print '<pre>'; print_r("this"); print '</pre>';
-//    // print '<pre>'; print_r($this); print '</pre>';exit;
-//  print '<pre>'; print_r($form_state); print '</pre>';exit;
-// //
-// //  print '<pre>'; print_r("form state"); print '</pre>';
-// //  print '<pre>'; print_r($form_state); print '</pre>';
-// //  dpm("form state");
-// //  dpm($form_state->getValues());exit;
-// //  $values = $form_state['values'];
-// //  if (isset($values['block_token'])) {
-// //    // Execute the query only when value changes.
-// //    if ($form['settings']['block_token']['#default_value'] != $values['block_token']) {
-// //      db_update('block')
-// //        ->fields(array('block_token' => $values['block_token']))
-// //        ->condition('module', $values['module'])
-// //        ->condition('delta', $values['delta'])
-// //        ->execute();
-// //
-// //      // Flush all filter module cache to use the updated block_token values.
-// //      // @todo flush token caches that prevent new token from displaying.
-// //      cache_clear_all('*', 'cache_filter', TRUE);
-// //    }
-// //  }
-// }
