@@ -12,7 +12,6 @@ use Drupal\Core\Render\Element;
 
 define('BLOCK_TOKEN_SEPARATOR', ':');
 
-
 /**
  * Implements hook_help().
  */
@@ -57,36 +56,12 @@ function block_token_help($route_name, RouteMatchInterface $route_match) {
  */
 function block_token_block_render($bid) {
 
-  // $block = block_load($module, $delta);
-  // foreach (array('region', 'title') as $key) {
-  //   $block->{$key} = '';
-  // }
-  // $block = _block_render_blocks(array($block));
-  // $block = _block_get_renderable_array($block);
-  // return drupal_render($block);
-  // return "render block";
-
-
-
-
-// $render = \Drupal::entityManager()->
-//   getViewBuilder('block_content')->view($block);
-// return $render;
-
-
-
-
-  $block1 = \Drupal\block\Entity\Block::load($bid);
+  $block = \Drupal\block\Entity\Block::load($bid);
   $block_content = \Drupal::entityManager()
     ->getViewBuilder('block')
-    ->view($block1);
+    ->view($block);
 
-  // return "<div>hello1</div>";
-
-// dpm( drupal_render($block_content)->__toString());
   return drupal_render($block_content)->__toString();
-
-
 }
 
 /**
@@ -233,17 +208,3 @@ function block_token_token_name($module, $block_id) {
   // @todo use machine_name if available
   return $module . BLOCK_TOKEN_SEPARATOR . $block_id;
 }
-
-
-/**
- * Implements hook_preprocess_HOOK().
- */
-//function block_token_preprocess_block(&$variables) {
-//  // Blocks coming from page manager widget do not have id.
-//  if (!empty($variables['elements']['#id'])) {
-//    $block = Block::load($variables['elements']['#id']);
-//    if ($classes = $block->getThirdPartySetting('block_token', 'tokens')) {
-//      $variables['attributes']['class'][] = $classes;
-//    }
-//  }
-//}
