@@ -82,12 +82,12 @@ function block_token_block_render($bid) {
 
 
 
-$block1 = \Drupal\block\Entity\Block::load('bartik_search');
+$block1 = \Drupal\block\Entity\Block::load($bid);
 $block_content = \Drupal::entityManager()
   ->getViewBuilder('block')
   ->view($block1);
 
-  return "<div>hello1</div>";
+  // return "<div>hello1</div>";
 
 // dpm( drupal_render($block_content)->__toString());
 return drupal_render($block_content)->__toString();
