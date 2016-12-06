@@ -143,8 +143,8 @@ function block_token_tokens($type, $tokens, array $data = array(), array $option
       $replacement = '';
 
       if (block_token_blocks($token)) {
-        list($module, $delta) = explode(BLOCK_TOKEN_SEPARATOR, $token, 2);
-        $replacement = block_token_block_render($delta);
+        list($module, $id) = explode(BLOCK_TOKEN_SEPARATOR, $token, 2);
+        $replacement = block_token_block_render($id);
       }
 
       $replacements[$original] = $replacement;
