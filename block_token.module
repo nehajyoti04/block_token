@@ -45,11 +45,8 @@ function block_token_help($route_name, RouteMatchInterface $route_match) {
 
 /**
  * Renders the block.
- *
- * @param string $module
- *   Module name.
- * @param string $delta
- *   Block delta.
+ * @param  string  $bid
+ *   Block Id.
  *
  * @return string
  *   Rendered block.
@@ -156,7 +153,6 @@ function block_token_tokens($type, $tokens, array $data = array(), array $option
   return $replacements;
 }
 
-
 /**
  * Implements hook_form_FORM_ID_alter().
  */
@@ -166,7 +162,6 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
     /** @var \Drupal\block\BlockInterface $block */
     $block = $form_state->getFormObject()->getEntity();
 
-
     // This will automatically be saved in the third party settings.
     $form['third_party_settings']['#tree'] = TRUE;
     $form['third_party_settings']['block_token']['token_value'] = array(
@@ -174,24 +169,17 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
       '#title' => t('Create the token for this block'),
       '#description' => t('Token string is not available until the block is saved.'),
       '#default_value' => $block->getThirdPartySetting('block_token', 'token_value'),
-      // '#default_value' => isset($block->getThirdPartySetting('block_token', 'token_value')) ? $block->getThirdPartySetting('block_token', 'token_value') : '',
     );
 
+    $id = $form['id']['#default_value'];
+    $module = $form['settings']['provider']['#value'];
 
-
-    $block_module = end($block->getDependencies()['module']);
-    $original_id = $block->getOriginalId();
-
-    // if (!is_null($block->delta)) {
-    if (!$block->getThirdPartySetting('block_token', 'token_value')) {
-      $token = "hello 123";
-      // $token = block_token_token_name($original_id);
-
-      $form['token_settings']['block_token']['token_value']['#description'] = t('Token will be @token', array(
+    if (!$block->getThirdPartySetting('block_token', 'token_value') ) {
+      $token = block_token_token_name($module, $id);
+      $form['third_party_settings']['block_token']['token_value']['#description'] = t('Token will be @token', array(
         '@token' => sprintf('[block_token:%s]', $token),
       ));
     }
-
   }
 }
 
@@ -200,8 +188,8 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
  *
  * @param string $module
  *   Module name.
- * @param string $delta
- *   Block delta.
+ * @param string $block_id
+ *   Block Id.
  *
  * @return string
  *   Token name.
