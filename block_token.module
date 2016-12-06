@@ -82,16 +82,18 @@ function block_token_blocks($token = NULL) {
 
     // Select all the name fields from the config table  starting with block.block.
     $blocks = \Drupal::database()->select('config', 'b')
-      ->fields('b', array('name'))
+      ->fields('b', array('name','data'))
       ->condition('name', db_like("block.block") . '%' , 'LIKE' )
       ->execute();
 
     foreach ($blocks as $block) {
-      $bid = explode('.', $block->name)[2];
-      $block = \Drupal\block\Entity\Block::load($bid);
-      $module = end($block->getDependencies()['module']);
+      if (unserialize($block->data)['third_party_settings']['block_token']['token_value']) {
+        $bid = explode('.', $block->name)[2];
+        $block = \Drupal\block\Entity\Block::load($bid);
+        $module = end($block->getDependencies()['module']);
 
-      $block_token[block_token_token_name($module, $bid)] = $block;
+        $block_token[block_token_token_name($module, $bid)] = $block;
+      }
     }
 
     if (!is_null($token)) {
