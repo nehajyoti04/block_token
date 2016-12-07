@@ -9,6 +9,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\block\Entity;
 use Drupal\Core\Render;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Access\AccessResult;
 
 define('BLOCK_TOKEN_SEPARATOR', ':');
 
@@ -159,7 +160,7 @@ function block_token_tokens($type, $tokens, array $data = array(), array $option
  * Implements hook_form_FORM_ID_alter().
  */
 function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  if (\Drupal::currentUser()->hasPermission('administer block classes')) {
+  if (\Drupal::currentUser()->hasPermission('administer block token')) {
 
     /** @var \Drupal\block\BlockInterface $block */
     $block = $form_state->getFormObject()->getEntity();
@@ -197,6 +198,22 @@ function block_token_form_block_form_alter(&$form, \Drupal\Core\Form\FormStateIn
  *   Token name.
  */
 function block_token_token_name($module, $block_id) {
-  // @todo use machine_name if available
   return $module . BLOCK_TOKEN_SEPARATOR . $block_id;
+}
+
+/**
+ * Route access callback
+ *
+ */
+function block_token_route_access() {
+  // Admin: always.
+  if (Drupal::currentUser()->hasPermission('administer taxonomy')) {
+    return AccessResult::allowed();
+  }
+
+  if(Drupal::currentUser()->hasPermission('administer block token')) {
+    return AccessResult::allowed();
+  }
+
+  return AccessResult::forbidden();
 }
