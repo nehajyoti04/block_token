@@ -10,6 +10,7 @@ use Drupal\block\Entity;
 use Drupal\Core\Render;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Access\AccessResult;
+
 define('BLOCK_TOKEN_SEPARATOR', ':');
 
 /**
